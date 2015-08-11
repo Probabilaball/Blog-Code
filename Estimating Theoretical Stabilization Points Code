@@ -3,6 +3,7 @@
 data <- read.csv('C:/[Your file path here]/obp data.csv',header=T)
 
 #Define Random variables. x is the observed on-base events in n plate appearances
+#Currently set to OBP, but this may be changed here (plot titles will still show OBP, however)
 
 x <- data$H + data$BB + data$HBP
 n <- data$PA
