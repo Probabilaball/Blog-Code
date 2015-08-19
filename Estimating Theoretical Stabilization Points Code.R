@@ -85,7 +85,7 @@ s2 = N*sum(n*(x/n-muStart)^2)/((N-1)*sum(n))
 MStart = (muStart*(1-muStart)-s2)/(s2-muStart*(1-muStart)/N*sum(1/n))
 phiStart = 1/(MStart+1)
 
-#Maximize it
+#Calculate maximum likelihood estimates
 
 ml = mlBetaBinom(c(muStart,phiStart),x,n)
 mu = ml$par[1]
