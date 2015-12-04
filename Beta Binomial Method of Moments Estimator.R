@@ -20,10 +20,14 @@ mm.est <- function(x, n) {
  #diff = difference, keep track of how sum of squared difference
  #between new and old weights. When difference gets lower than a certain
  #tolerance, stop.
+ #iter = count of iterations. If iterations gets too high, stop and throw an error
 
  diff <- 10000
+ iter <- 0
 
  while(diff > 10^(-6)) { 
+
+  iter <- iter + 1
 
   #w is the sum of weights
 
@@ -47,7 +51,9 @@ mm.est <- function(x, n) {
 
   w.i <-  n/(1+phi*(n-1))
 
-  diff <- sum((w.i.old - w.i))^2
+  diff <- sum((w.i.old - w.i)^2)
+
+  if(iter > 1000) stop("Algorithm failed to converge")
 
   }
 
