@@ -1,6 +1,6 @@
 #Read in Data
 
-d <- read.csv('C:/[File Path]/Historical Hitter data.csv',header=T)
+d <- read.csv('C:/Users/Robert/Dropbox/Baseball Blog Articles/Pitching Stabilization Points through Time/Historical Pitcher Data.csv',header=T)
 
 #Define Functions for ML Estimation via the beta-binomial distribution
 
@@ -62,10 +62,10 @@ mlBetaBinom <- function(par, x, n) {
 #there is no data for early years. Years start at 1920.
 
 
-startYear = 1900
+startYear = 1925
 endYear = 2014
 nYears = 6
-cutoff = 300
+cutoff = 400
 
 #Create a vector of zeros to store stabiization points (the Ms)
 #and the league mean talent level of each statistic (the mus)
@@ -93,8 +93,8 @@ for(year in startYear:endYear) {
 
  samp = (season <= year) & (season >= year - nYears +1)
 
- x <- (d$X3B)[samp]
- n <- (d$PA)[samp]
+ x <- (d$HR)[samp]
+ n <- (d$TBF)[samp]
 
  s = (!is.na(x)) & (n >= cutoff)
 
@@ -127,12 +127,12 @@ for(year in startYear:endYear) {
 
  #plotName <- paste(year, ".jpg")
  #jpeg(plotName)
- #hist(x/n, freq=F, xlab = "3B Rate", ylab = "Density", main = year, xlim = c(0.0,.06), ylim = c(0, 170), breaks = seq(0.0, .06, by = 0.0025)) 
- #curve(dbeta(x, ml$par[1]*(1-ml$par[2])/ml$par[2],(1-ml$par[1])*(1-ml$par[2])/ml$par[2]), add=T, lty=2)
+ hist(x/n, freq=F, xlab = "HR Rate", ylab = "Density", main = year, xlim = c(0.0,.065), ylim = c(0, 137), breaks = seq(0,.065, by = 0.0025)) 
+ curve(dbeta(x, ml$par[1]*(1-ml$par[2])/ml$par[2],(1-ml$par[1])*(1-ml$par[2])/ml$par[2]), add=T, lty=2)
  #dev.off()
 
- #The plots get saved in the "My Documents folder" on my pc. Maybe different on yours.
- #I then use a freeware gif program to make the gif.
+ #The plots get saved in my documents folder. Maybe different on yours.
+ #I use a freeware gif program to make a gif.
 
 }
 

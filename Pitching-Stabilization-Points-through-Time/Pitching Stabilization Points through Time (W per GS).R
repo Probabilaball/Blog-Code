@@ -1,6 +1,6 @@
 #Read in Data
 
-d <- read.csv('C:/[File Path]/Historical Hitter data.csv',header=T)
+d <- read.csv('C:/Users/Robert/Dropbox/Baseball Blog Articles/Pitching Stabilization Points through Time/Historical Pitcher Data.csv',header=T)
 
 #Define Functions for ML Estimation via the beta-binomial distribution
 
@@ -58,30 +58,23 @@ mlBetaBinom <- function(par, x, n) {
 #endYear = the year to end the moving average
 #nYears = number of years to include in moving average. 
 #cutoff = minimum number of PA/AB required to be included in sample
-#For Some statistics (SFs, for example),
-#there is no data for early years. Years start at 1920.
+#For Some statistics (SFs, for example), there is no data for early years. 
+#Years start at 1900.
 
 
-startYear = 1900
+startYear = 1905
 endYear = 2014
 nYears = 6
-cutoff = 300
+cutoff = 15
 
 #Create a vector of zeros to store stabiization points (the Ms)
 #and the league mean talent level of each statistic (the mus)
 
-M = rep(0, length(startYear:endYear))
-mu = rep(0, length(startYear:endYear))
+MW = rep(0, length(startYear:endYear))
 
-#Create a vector of lower and upper bounds for when I make the plots
-#I run the code once to find the lower and upper x and y limits
-#Then replace those in the code that plots all the images. 
+muW = rep(0, length(startYear:endYear))
 
-xMin = 1
-xMax = 0
-yMax = 0
-
-#Get vector of seasons to look at
+#Get vector of seasons to get the sample I want
 
 season = d[,1]
 
@@ -93,8 +86,11 @@ for(year in startYear:endYear) {
 
  samp = (season <= year) & (season >= year - nYears +1)
 
- x <- (d$X3B)[samp]
- n <- (d$PA)[samp]
+
+ #W M Calculation
+
+ x <- (d$W)[samp]
+ n <- (d$GS)[samp]
 
  s = (!is.na(x)) & (n >= cutoff)
 
@@ -109,35 +105,33 @@ for(year in startYear:endYear) {
 
  ml = mlBetaBinom(c(muStart,phiStart),x,n)
  
- M[year-startYear+1] = (1-ml$par[2])/ml$par[2]
- mu[year-startYear+1] = ml$par[1]
+ MW[year-startYear+1] = (1-ml$par[2])/ml$par[2]
+ muW[year-startYear+1] = ml$par[1]
 
- #This is me keeping track of what the smallest and largest
- #x and y values that both the observed data
- #and the estimated talent distribution take
-
- xMin = min(xMin, x/n)
- xMax = max(xMax, x/n)
- yMax = max(yMax, max(hist(x/n, plot=F)$density))
- yMax = max(yMax, max(dbeta((ml$par[1]*(1-ml$par[2])/ml$par[2]-1)/((1-ml$par[2])/ml$par[2]-2), ml$par[1]*(1-ml$par[2])/ml$par[2],(1-ml$par[1])*(1-ml$par[2])/ml$par[2])))
-
- #This is the code to actually make the plots for the gif
- #Remove commenting when you figure out the appropriate values
- #for the x and y limits and number of breaks
-
- #plotName <- paste(year, ".jpg")
- #jpeg(plotName)
- #hist(x/n, freq=F, xlab = "3B Rate", ylab = "Density", main = year, xlim = c(0.0,.06), ylim = c(0, 170), breaks = seq(0.0, .06, by = 0.0025)) 
- #curve(dbeta(x, ml$par[1]*(1-ml$par[2])/ml$par[2],(1-ml$par[1])*(1-ml$par[2])/ml$par[2]), add=T, lty=2)
- #dev.off()
-
- #The plots get saved in the "My Documents folder" on my pc. Maybe different on yours.
- #I then use a freeware gif program to make the gif.
 
 }
 
+#Make plots - use ggplot2 for time plots
 
+library(ggplot2)
 
+#Look at all stabilization points for all years at once - neat picture, but a jumbled mess
 
+#matplot(startYear:endYear,cbind(M1B, M2B, M3B, MXBH, MHR, MSO, MBB, MBA, MOBP, MHBP), type = 'l', xlab = 'Year', ylab = 'Estimated M')
 
+#Plots of stabilization Points over time (uses ggplot2)
+
+qplot(startYear:endYear, MW, xlab = 'Year', ylab = 'Estimated Stabilization Point', main = "Six Year Moving Win Rate Stabilization Point") + geom_line(col=2)
+
+#Table of stabilization points for each statistic each year
+
+#round(data.frame('Year' = startYear:endYear, M1B, M2B, M3B, MXBH, MHR, MSO, MBB, MBA, MOBP, MHBP),2)
+
+#Plots of means over time (uses ggplot2)
+
+qplot(startYear:endYear, muW, xlab = 'Year', ylab = 'Estimated Mean', main = "Six Year Moving Win Mean") + geom_line(col=2)
+
+#Table of means for each statistic for each year
+
+#round(data.frame('Year' = startYear:endYear, mu1B, mu2B, mu3B, muXBH, muHR, muSO, muBB, muBA, muOBP, muHBP),2)
 
