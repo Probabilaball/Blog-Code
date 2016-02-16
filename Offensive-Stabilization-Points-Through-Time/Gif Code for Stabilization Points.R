@@ -1,6 +1,6 @@
 #Read in Data
 
-d <- read.csv('C:/[File Path]/historical hitter data.csv',header=T)
+d <- read.csv('C:/[File Path]/Historical Hitter data.csv',header=T)
 
 #Define Functions for ML Estimation via the beta-binomial distribution
 
