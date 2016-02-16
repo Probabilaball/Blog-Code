@@ -1,0 +1,126 @@
+
+# Shrinkage Examples
+
+To give an example of this, let's look at a $4-6$ team and a $40-60$ team, using $M = 73$ as calculated above. On the proportion scale, we have
+
+
+$Var\left(\dfrac{w_i}{n_i}\right) = \dfrac{0.25(73)}{10(73+1)} +\dfrac{0.25}{73+1} = 0.02.446 + 0.00338 = 0.02804$
+
+ 
+
+ Then the shrinkage coefficient is given by 
+
+
+$B = \dfrac{0.0338}{0.02804} = 0.12$
+
+ 
+
+And the estimator is given by 
+
+
+$\hat{\theta_i} = 0.5 + (0.12) (0.4 - 0.5) = 0.488$
+
+ 
+
+And to show that this is equal to the addition rule,
+
+ 
+
+$\hat{\theta_i} = \dfrac{4+36.5}{10+73} = 0.488$
+
+ 
+#Math Explanation
+
+A More Mathematical Explanation
+
+
+Define $\tilde{\theta_i} = w_i/n_i$, the unshrunk win proportion for team $i$. We can then write $w_i = n_i \tilde{\theta_i}$. The shrinkage estimator then becomes
+
+
+$\hat{\theta_i} = \dfrac{n_i \tilde{\theta_i} + 36.5}{n_i + 73}$
+
+
+Using L'hospital's rule, we calculate the limit as $n_i$ approaches infinity as
+
+
+$\displaystyle \lim_{n \rightarrow \infty} \hat{\theta_i} = \lim_{n \rightarrow \infty} \dfrac{n_i \tilde{\theta_i} + 36.5}{n_i + 73} = \lim_{n \rightarrow \infty} \dfrac{\tilde{\theta_i}}{1} = \theta_i$
+
+
+Since $\tilde{\theta_i}$ is going to the true win proportion $\theta_i$, so is the shrinkage estimator.
+
+
+Now let's suppose the number of games being shrunk was some function of the sample size $g(n_i)$ that is linear in $n_i$, so that $g'(n_i) = k$, where $k$ is some constant. Then we would have
+
+
+$\displaystyle \lim_{n \rightarrow \infty} \hat{\theta_i} = \lim_{n \rightarrow \infty} \dfrac{n_i \tilde{\theta_i} + g(n_i)}{n_i + 2g(n_i)} = \lim_{n \rightarrow \infty} \dfrac{\tilde{\theta_i} + k}{1 + 2k} = \dfrac{\theta_i + k}{1 + 2k}$
+
+
+The estimator is no longer converging to the true win proportion. And if somehow the number of games was an increasing function of $n_i$, so that $g'(n_i) > 0$, then we would have
+
+
+$\displaystyle \lim_{n \rightarrow \infty} \hat{\theta_i} = \lim_{n \rightarrow \infty} \dfrac{n_i \tilde{\theta_i} + g(n_i)}{n_i + 2g(n_i)} = \lim_{n \rightarrow \infty} \dfrac{\tilde{\theta_i} + g'(n_i)}{1 + 2g'(n_i)} = \lim_{n \rightarrow \infty} \dfrac{g''(n_i)}{2g''(n_i)} = \dfrac{1}{2}$  
+
+
+The shrinkage estimator would be converging to the population mean of $0.5$ as the number of games increased.
+
+Note that this implies that any shrinkage function $g(n_i)$ that is a constant or decreasing function of the number of games played ($g'(n_i) \le 0$) will eventually converge to the true win proportion. It just won't have the lowest mean squared error that you get with using the correct results of the Bayes model.
+
+#Intuitive Explanation
+
+Think of it this way - if I asked you to tell me about the distribution of a team's observed winning percentage, but I didn't tell you which team I'm thinking of, then you have to first figure that the team's true winning percentage is somewhere between 40% and 60%. But even if you knew their exact winning percentage, you still couldn't tell me what percentage of games they would win - sometimes they'll be above, sometimes they'll be below. What winning percentage should you use in estimating how much variation there is around a team's true winning percentage (the within-team variance)? Use the average - 50%, or 0.5 in proportion form. So, add the variance from the 40%-60% estimate to the within-team variance assuming a 50% winning percentage, and that gives you the total, observed variance.
+
+
+
+The answer lies in the between-team variance and the within-team variance. 
+
+
+I think people see the data $w_i$ on the wins scale and feel like it should . After all, isn't the variation between teams getting bigger as the season goes on? After 10 games a two teams might have 4 and 6 wins, but after 100 games they might have 40 and 60 - the between-team variance is increasing naturally. So gut instinct is that the number of games you shrink by should be increasing too.
+
+
+But think about the shrinkage estimator
+
+
+$\hat{\theta_i} = \dfrac{w_i + 36.5}{n_i + 73}$
+
+
+It's doing two things simultaneously: shrinking and converting from the wins scale to the win proportion scale. And on the win proportion scale, between-team variance is constant - the $\theta_i$ aren't changing, are they? And on the win proportion scale, you can't just start adding more games. More games is more information - and since the raw estimate $w_i/n_i$ is already converging to $\theta_i$, adding more and more information is going to make it converge to something else - which isn't what we want.
+
+
+
+
+
+First, let's think about what determines the correct shrinkage amount. It comes from the relative contributions of the within-team variance and between-team variance to the total variance - if the within-team variance is small (that is, the observed values tend to be close to their true value) and the between-team variance is large (true values tend to be spread far apart), not much shrinkage will occur. Conversely, if the within-team variance is large (observed values tend to be spread out quite a bit around their true value) and between-team variance is small (true values tend to be clustered close together), then shrinkage will be substantial.
+
+
+On the win proportion scale, within-team variance is getting smaller as the number of games grows and the sample win proportion converges to the true win proportion, but between-team variance is constant (the $\theta_i$ aren't changing, aren't they?), so the magnitude of the shrinkage (but not the percentage shrinkage!) has to get smaller as the number of games increases. You can see this in the total variance formula - the $n_i$ is only in the part representing within-team variation.
+
+
+$Var\left(\dfrac{w_i}{n_i}\right) = \dfrac{0.25M}{n_i(M+1)} +\dfrac{0.25}{M+1}$ 
+
+
+Now think about the actual, observed wins scale - the within-team variance is getting larger at a rate of $n_i$, but the between-team variance is now growing at a rate of $n_i^2$. Hence, the magnitude of the shrinkage (but not the percentage shrinkage!) will actually get larger as the number of games grows. Again, you can see this in the variance for total variance of wins - the within-team variance now has factor $n_i$ in front of it while the between-team variance has factor $n_i^2$.
+
+
+$Var(w_i) = Var\left(n_i * \dfrac{w_i}{n_i}\right) = n_i^2 Var\left(\dfrac{w_i}{n_i}\right) = 0.25 n_i \left(\dfrac{M}{M+1}\right) +\dfrac{0.25n_i^2}{M+1}$
+
+
+
+
+Lastly, think about the shrinkage estimator
+
+
+$\hat{\theta_i} = \dfrac{w_i + 36.5}{n_i + 73}$
+
+
+It's doing two things simultaneously: shrinking and converting from the wins scale to the win proportion scale.
+
+
+Looking at raw wins, your initial thought is that the shrinkage amount must go up as the number of games go up. And if you were shrinking on the win scale, that would be true - you do need to shrink a team that has played 100 games more than you shrink a team that has played 10 games to get the true number of wins.
+
+
+But this shrinkage estimator does not produce estimates on the win scale - it produces estimates on the win proportion scale. And on the win proportion scale, shrinkage goes down as the number of games go up, since observed win proportions are naturally moving towards true win proportions. If the number of games you shrink by were going up, then you would either never
+
+
+
+
+
