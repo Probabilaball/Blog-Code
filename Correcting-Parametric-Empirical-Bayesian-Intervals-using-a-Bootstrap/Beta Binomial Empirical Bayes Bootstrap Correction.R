@@ -173,7 +173,7 @@ mm.bootstrap <- function(x, n, nBootstraps = 5000, confidence = 0.95) {
 
    
 #One word of caution - it is common (even likely) that the bootstrapped parameters
-#alpha and beta will contain some values. These are ignored when calculating the
+#alpha and beta will contain some negative values. These are ignored when calculating the
 #quantile, averaging over the bootstrapped values. This means that even though
 #you have 10000 bootstraps, you may be throwing some away and averaging over
 #fewer. These tend to be extreme value and will not have much of an effect
