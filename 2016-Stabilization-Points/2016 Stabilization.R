@@ -1,7 +1,7 @@
 #Read in Data
 
-h <- read.csv('C:/Users/Robert/Desktop/2016 Stabilization Points/2016 Hitting Data.csv',header=T)
-p <- read.csv('C:/Users/Robert/Desktop/2016 Stabilization Points/2016 Pitching Data.csv',header=T)
+h <- read.csv('C:/Users/Robert/Documents/GitHub/Blog-Code/2016-Stabilization-Points/2016 Hitting Data.csv',header=T)
+p <- read.csv('C:/Users/Robert/Documents/GitHub/Blog-Code/2016-Stabilization-Points/2016 Pitching Data.csv',header=T)
 
 #h = hitter data
 #p = pitcher data
@@ -103,6 +103,39 @@ mlGammaPoisson <- function(par, x, n) {
 
 }
 
+plot.stabilization.p <- function(M, se, lower.bound = 0.25, upper.bound = 0.75) {
+
+   #Plots estimated n as a function of stabilization level
+
+   p <- seq(lower.bound, upper.bound, by = .001)
+
+   n.est <- p/(1-p)*M
+
+   l <- n.est - 1.96*p/(1-p)*se
+   u <- n.est + 1.96*p/(1-p)*se
+
+   plot(p, n.est, type = 'l', xlab = "Stabilization Level", ylab = "Required Number of Events", main = "Estimated Number of Events Required\nfor Given Stabilization Level")
+   points(p,l, type= 'l', lty=2)
+   points(p,u, type = 'l', lty=2)
+
+}
+
+plot.stabilization.n <- function(M, se, lower.n = 1, upper.n = 600) {
+
+   #Plots estimated stabilization  level as a function of n
+
+   n <- seq(lower.n, upper.n,by = 1)
+
+   p.est <- n/(n + M)
+
+   l <- p.est - 1.96*n/(n+M)^2*se
+   u <- p.est + 1.96*n/(n+M)^2*se
+
+   plot(n,p.est, type = 'l', xlab = "Number of Events", ylab = "Estimated Stabilization Level", main = "Estimated Stabilization Level\nfor Given Number of Events",ylim = c(0,max(u)))
+   points(n,l, type= 'l', lty=2)
+   points(n,u, type = 'l', lty=2)
+
+}
 
 stabilize <- function(x, n, cutoff, model) {
 
@@ -127,6 +160,8 @@ stabilize <- function(x, n, cutoff, model) {
   
    se <- sqrt((-1/phi^2)^2*ml$v[2,2])
 
+   plot.stabilization.n(M, se,upper.n=max(n))
+
    return(list('Parameters' = c(mu, M), "Standard.Error" = se, "Model" = "Beta-Binomial"))
 
   }
@@ -145,6 +180,7 @@ stabilize <- function(x, n, cutoff, model) {
 
    se <- sqrt((-1/phi^2)^2*ml$v[2,2])
 
+   plot.stabilization.n(M, se,upper.n=max(n))
 
    return(list('Parameters' = c(mu, M), "Standard.Error" = se, "Model" = "Gamma-Poisson"))
 
@@ -209,8 +245,7 @@ stabilize(h$H - h$HR, h$AB - h$SO - h$HR + h$SF, cutoff = 300, 1)
 
 #PITCHING STATS
 
-#Correct innings pitched and solve for the denominator
-#of fangraphs BABIP
+#Correct innings pitched
 
 IP <- p$IP
 IP <- round(IP) + (IP-round(IP))/.3
