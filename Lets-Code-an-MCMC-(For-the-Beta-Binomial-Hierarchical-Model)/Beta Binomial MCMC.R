@@ -1,9 +1,13 @@
 #Read in data
 
-d <- read.csv('C:/Users/Robert/Desktop/Lets Code an MCMC (For the Beta-Binomial Hierarchical Model)/2015 Batting Average Data.csv')
+d <- read.csv('C:/Users/Robert/Documents/GitHub/Blog-Code/Lets-Code-an-MCMC-(For-the-Beta-Binomial-Hierarchical-Model)/2015 Batting Average Data.csv')
+
+#Cut sample to only players with 300 or more AB in the season 
 
 x <- d$H[d$AB >= 300]
 n <- d$AB[d$AB >= 300]
+
+#Make a histogram
 
 hist(x/n, main = "Histogram of Batting Averages\nin 2015 MLB Season (Min 300 AB)", xlab = "Observed Batting Average")
 
@@ -31,7 +35,8 @@ betaBin.mcmc <- function(x, n, mu.start, phi.start, burn.in = 1000, n.draws = 50
  #each at around 40%.
 
 
- #cond = conditional likelihood function for beta-binomial
+ #cond = conditional log posterior function for beta-binomial proportional 
+ #to full posterior distribution (not including normalizing constants)
  #input parameter values phi, mu and data x,n
  #Return sum of log-likelihood (l) and log prior (p)
 
@@ -88,17 +93,22 @@ betaBin.mcmc <- function(x, n, mu.start, phi.start, burn.in = 1000, n.draws = 50
   
    if((cand > 0) & (cand < 1)) {
 
-	  
+	  #cond.old = Conditional log posterior function at all previous values
+	  #cond.new = Conditional log posterior function at all previous values
+	  #except for candidate mu value.
 
-  	  lpo = cond(phi[i-1],mu[i-1],x, n)
- 	  lpn = cond(phi[i-1],cand,x, n)
+  	  cond.old = cond(phi[i-1],mu[i-1],x, n)
+ 	  cond.new = cond(phi[i-1],cand,x, n)
 
 	  #Draw an observation from a uniform(0,1)
 
  	  u = runif(1)
 
+	  #If difference in log posterior values is greater than log uniform
+        #observation, accept new mu value and increment acceptance counter
+	  #by 1.
 
-        if((lpn - lpo) > log(u)) {
+        if((cond.new - cond.old) > log(u)) {
 		mu[i] = cand
 		acceptance.mu = acceptance.mu+1
 	  }
@@ -115,16 +125,24 @@ betaBin.mcmc <- function(x, n, mu.start, phi.start, burn.in = 1000, n.draws = 50
   #Check if candidate is between 0 and 1. If not, discard it.
   
   if( (cand > 0) & (cand < 1)) {
+
+	#cond.old = Conditional log posterior function at all previous values
+	#cond.new = Conditional log posterior function at all previous values
+	#except for candidate mu value.
          
- 	lpo = cond(phi[i-1],mu[i-1],x, n)
-	lpn = cond(cand,mu[i-1],x, n)
+ 	cond.old = cond(phi[i-1],mu[i-1],x, n)
+	cond.new = cond(cand,mu[i-1],x, n)
 
 
 	#Draw an observation from a uniform(0,1)
 
  	u = runif(1)
 
-      if((lpn - lpo) > log(u)) {
+	#If difference in log posterior values is greater than log uniform
+      #observation, accept new phi value and increment acceptance counter
+	#by 1.
+
+      if((cond.new - cond.old) > log(u)) {
 		phi[i] = cand
 		acceptance.phi = acceptance.phi + 1
 	} 
