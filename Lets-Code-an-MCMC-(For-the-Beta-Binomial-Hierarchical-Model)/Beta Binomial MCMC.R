@@ -15,6 +15,13 @@ hist(x/n, main = "Histogram of Batting Averages\nin 2015 MLB Season (Min 300 AB)
 
 set.seed(5)
 
+
+
+
+
+
+
+
 #MCMC Function
 
 
@@ -37,12 +44,14 @@ betaBin.mcmc <- function(x, n, mu.start, phi.start, burn.in = 1000, n.draws = 50
 
  #cond = conditional log posterior function for beta-binomial proportional 
  #to full posterior distribution (not including normalizing constants)
- #input parameter values phi, mu and data x,n
+ #input constant parameter values phi, mu and data vectors x,n
  #Return sum of log-likelihood (l) and log prior (p)
+ #this is the function I call m in my blog post.
 
  cond = function(phi, mu, x, n) {
-  	 l = sum(lbeta(mu*(1-phi)/phi + x, (1-mu)*(1-phi)/phi+n-x) - lbeta(mu*(1-phi)/phi, (1-mu)*(1-phi)/phi))
-       p = dbeta(mu,0.5,0.5,log=T)+dbeta(phi,0.5,0.5,log=T)
+       N = length(x)
+       l = sum(lbeta(mu*(1-phi)/phi + x, (1-mu)*(1-phi)/phi+n-x)) - N*lbeta(mu*(1-phi)/phi, (1-mu)*(1-phi)/phi)
+       p = -0.5*log(mu) - 0.5*log(1-mu) - 0.5*log(phi) - 0.5*log(1-phi)
        return(l + p)
  }
 
@@ -173,6 +182,15 @@ betaBin.mcmc <- function(x, n, mu.start, phi.start, burn.in = 1000, n.draws = 50
 
 }
 
+
+
+
+
+
+
+
+#Fitting the model
+
 #Use multiple chains to and check that all chains are converging to the same
 #stationary distribution after the burn-in. Use multiple starting values to
 #help check.
@@ -185,6 +203,8 @@ chain.3 <- betaBin.mcmc(x,n, 0.100, 0.0001)
 #all chains are converging to the same stationary distribution. A big blob of
 #colors is good. One or more chains separate from the rest is bad.
 
+par(mfrow = c(3,1))
+
 matplot(data.frame(chain.1$mu, chain.2$mu, chain.3$mu), type = 'l', lty = c(1,2,3), xlab = "Iteration", ylab = "Mu", main = "MCMC Chains for Mu")
 matplot(data.frame(chain.1$phi, chain.2$phi, chain.3$phi), type = 'l', lty = c(1,2,3), xlab = "Iteration", ylab = "Phi", main = "MCMC Chains for Phi")
 matplot(data.frame(chain.1$theta[1,], chain.2$theta[1,], chain.3$theta[1,]), type = 'l', lty = c(1,2,3), xlab = "Iteration", ylab = "Theta 1", main = "MCMC Chains for Theta 1")
@@ -195,6 +215,11 @@ chain.1$acceptance
 chain.2$acceptance
 chain.3$acceptance
 
+
+
+
+
+
 #Inference
 
 #Combine all three chains into one for inference
@@ -204,26 +229,51 @@ phi <- c(chain.1$phi, chain.2$phi, chain.3$phi)
 theta <- cbind(chain.1$theta, chain.2$theta, chain.3$theta)
 
 
-#Mean, standard deviation, and 95% intervals for mu
+#Mean, standard deviation, and 95% interval for mu
 
 hist(mu, xlab = 'Mu', freq=F)
 mean(mu)
 sd(mu)
 quantile(mu,c(.025,.975))
 
-#Mean, standard deviation, and 95% intervals for phi
+#Mean, standard deviation, and 95% interval for phi
 
 hist(phi, xlab = 'Phi', freq=F)
 mean(phi)
 sd(phi)
 quantile(phi,c(.025,.975))
 
-#Mean, standard deviation, and 95% intervals for theta, the
-#batting average for each player in the sample
+#Histogram, mean, and 95% interval for Stabilization Point
+
+hist((1-phi)/phi, xlab = 'M', main = 'Histogram of Stabilization Point', freq=F)
+mean((1-phi)/phi)
+quantile((1-phi)/phi, c(0.025,0.975))
+
+#Histogram, mean, and 95% interval for Bryce Harper's batting
+#average in 2015.
+
+hist(theta[1,], xlab = 'Batting Averge', main = 'Posterior Distribution of Batting\nAverage for Bryce Harper',freq=F)
+mean(theta[1,])
+sd(theta[1,])
+quantile(theta[1,], c(0.025,0.975))
+
+#Probability Bryce Harper's average is larger than 0.330
+
+mean(theta[1,] >= 0.330)
+
+#Posterior predictive of Bryce Harper's observed average in a new 521 AB
+
+theta1.new <- 1/n[1]*rbinom(length(theta[1,]), n[1], theta[1,])
+
+hist(theta1.new, xlab = 'Observed Batting Average', main = 'Posterior Predictive Distribution of Observed Batting\nAverage for Bryce Harper in a new set of AB')
+
+mean(theta1.new)
+sd(theta1.new)
+quantile(theta1.new, c(0.025,0.975))
+
+#Means, standard deviations, and 95% intervals for thetas, the
+#true battings average of  each player in the sample
 
 names <- d$Name[d$AB >= 300]
-
-hist(theta[1,], xlab = 'Batting Averge', main = 'Posterior Distribution of Batting\nAverage for Brye Harper',freq=F)
-
 data.frame("Player" = names, "Mean" = apply(theta,1,mean), "SD" = apply(theta,1,sd), "Lower 95" = apply(theta,1,quantile, 0.025), "Upper 95" = apply(theta,1,quantile, 0.975))
 

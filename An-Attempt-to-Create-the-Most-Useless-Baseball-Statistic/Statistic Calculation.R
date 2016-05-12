@@ -1,30 +1,30 @@
 #Read in historical data for pitchers
 
-d <- read.csv('C:/Users/Robert/Dropbox/Baseball Blog Articles/An Attempt to Create the Most Useless Baseball Stat/Historical BABIP Data.csv',header=T)
+d <- read.csv('C:/Users/Robert/Documents/GitHub/Blog-Code/An-Attempt-To-Create-The-Most-Useless-Baseball-Statistic/Historical BABIP Data.csv',header=T)
 
 #Set start and ending years for calculating year-to-year correlation
 #and the minimum number of BIP in a season to be considered in the sample.
 
 startYear = 1901
-endYear = 2014
+endYear = 2015
 cutoff = 300
 
 #Get the season for each data point
 
 season = d[,1]
 
-#Create empty vectors for the mean and variance of my stat each year (LIFT),
+#Create empty vectors for the mean and variance of my stat each year,
 #the mean and variance of standard normal CDF of normalized BABIP for each
-#year (P), and the mean and variance for pitcher BABIP each year (XN)
+#year (p), and the mean and variance for pitcher BABIP each year (xn)
 
-muLIFT = rep(0, length(startYear:endYear))
-varLIFT = rep(0, length(startYear:endYear))
+mu.stat = rep(0, length(startYear:endYear))
+var.stat = rep(0, length(startYear:endYear))
 
-muP = rep(0, length(startYear:endYear))
-varP = rep(0, length(startYear:endYear))
+mu.p = rep(0, length(startYear:endYear))
+var.p = rep(0, length(startYear:endYear))
 
-muXN = rep(0, length(startYear:endYear))
-varXN = rep(0, length(startYear:endYear))
+mu.xn = rep(0, length(startYear:endYear))
+var.xn = rep(0, length(startYear:endYear))
 
 #Begin calculation loop
 
@@ -50,35 +50,36 @@ for(year in startYear:endYear) {
  #for that year and dividing by the standard deviation of BABIP for that year
  #then take the standard normal CDF of those values 
 
- p <- pnorm(((x/n) - mean(x/n))/sd(x/n))
+ p <- 2*pnorm(-abs(((x/n) - mean(x/n))/sd(x/n)))
 
  #Calculate the average and variance of my new stat 1/(1-p)
  #also calculate the mean and variance of BABIP for that year
  #and the mean and variance of standard normal CDF of normalized
  # BABIP for that year
 
- muLIFT[year-startYear+1] = mean(1/(1-p))
- varLIFT[year-startYear+1] = var(1/(1-p))
+ mu.stat[year-startYear+1] = mean(1/(1-p))
+ var.stat[year-startYear+1] = var(1/(1-p))
 
- muXN[year-startYear+1] = mean(x/n)
- varXN[year-startYear+1] = var(x/n)
+ mu.xn[year-startYear+1] = mean(x/n)
+ var.xn[year-startYear+1] = var(x/n)
 
- muP[year-startYear+1] = mean(p)
- varP[year-startYear+1] = var(p)
+ mu.p[year-startYear+1] = mean(p)
+ var.p[year-startYear+1] = var(p)
 
 }
 
 #Create data frame of my statistic
 #Tell R to display lots of digits instead of scientific notation
 
-
 options('scipen' = 999)
-data.frame('Year' = startYear:endYear, muLIFT, varLIFT)
+data.frame('Year' = startYear:endYear, mu.stat, var.stat)
 
 #Plot mean and variance of my statistic by year
 
-plot(startYear:endYear, muLIFT, type = 'l')
-plot(startYear:endYear, varLIFT, type = 'l')
+par(mfrow = c(1,2))
+
+plot(startYear:endYear,  mu.stat, type = 'l', xlab = 'Year', ylab = 'Mean', main = 'Mean of Statistic by Year')
+plot(startYear:endYear, var.stat, type = 'l', xlab = 'Year', ylab = 'Variance', main = 'Variance of Statistic by Year')
 
 
 
@@ -92,7 +93,7 @@ endYear = 2014
 
 #Empty vector of year-to-year correlations
 
-corLIFT <- rep(0, length(startYear:endYear))
+cor.stat <- rep(0, length(startYear:endYear))
 
 #Minimum number of BIP to be included in sample
 
@@ -117,7 +118,7 @@ for(currYear in startYear:endYear) {
 
  p <- pnorm(((x/n) - mean(x/n))/sd(x/n))
 
- babip.1 <- data.frame('Name' = d$Name[samp1], x/n, 'LIFT' = 1/(1-p))
+ babip.1 <- data.frame('Name' = d$Name[samp1], x/n, 'Stat' = 1/(1-p))
 
  #Calculate statistic for the current year
  #Store the player, BABIP for that year, and stat
@@ -128,7 +129,7 @@ for(currYear in startYear:endYear) {
 
  p <- pnorm(((x/n) - mean(x/n))/sd(x/n))
 
- babip.2 <- data.frame('Name' = d$Name[samp2], x/n, 'LIFT' = 1/(1-p))
+ babip.2 <- data.frame('Name' = d$Name[samp2], x/n, 'Stat' = 1/(1-p))
 
  #Merge the two into a common data frame by player name
 
@@ -136,16 +137,16 @@ for(currYear in startYear:endYear) {
 
  #Calculate the correlation between this year and the previous year.
 
- corLIFT[currYear - startYear + 1] = cor(babip.data$LIFT.x,babip.data$LIFT.y)
+ cor.stat[currYear - startYear + 1] = cor(babip.data$Stat.x,babip.data$Stat.y)
 
 }
 
 #Basic R graphics plot of year-to-year correlation of my statistic versus time
 
-plot(startYear:endYear,corLIFT, xlab = 'Year')
+data.frame('Year' = startYear:endYear, 'Correlation' = cor.stat)
 
-#Fancier ggplot of year-to-year correlation versus time
 
-library(ggplot2)
-qplot(startYear:endYear, corLIFT,xlab = 'Year', ylab = 'Year-to-year Correlation')
+plot(startYear:endYear,cor.stat, xlab = 'Year')
+
+
 
