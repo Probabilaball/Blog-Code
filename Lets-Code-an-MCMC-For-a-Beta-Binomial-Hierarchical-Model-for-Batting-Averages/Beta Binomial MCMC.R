@@ -11,13 +11,6 @@ n <- d$AB[d$AB >= 300]
 
 hist(x/n, main = "Histogram of Batting Averages\nin 2015 MLB Season (Min 300 AB)", xlab = "Observed Batting Average")
 
-#Set the seed so I get the same results each time I run the code.
-
-set.seed(5)
-
-
-
-
 
 
 
@@ -39,16 +32,16 @@ betaBin.mcmc <- function(x, n, mu.start, phi.start, burn.in = 1000, n.draws = 50
  #step for mu and phi. These are defaulted to 0.005 and 0.001, but 
  #will have to be changed for different data sets. The goal is 
  #to manipulate these so that the acceptance rates for mu and phi are
- #each at around 40%.
+ #each at roughly around 40%.
 
 
- #cond = conditional log posterior function for beta-binomial proportional 
- #to full posterior distribution (not including normalizing constants)
- #input constant parameter values phi, mu and data vectors x,n
+ #m = log of function for beta-binomial that is proportional to full posterior
+ #distribution for mu and phi (it does not include normalizing constants).
+ #Input constant parameter values mu, phi and data vectors x,n
  #Return sum of log-likelihood (l) and log prior (p)
  #this is the function I call m in my blog post.
 
- cond = function(phi, mu, x, n) {
+ m  = function(mu, phi, x, n) {
        N = length(x)
        l = sum(lbeta(mu*(1-phi)/phi + x, (1-mu)*(1-phi)/phi+n-x)) - N*lbeta(mu*(1-phi)/phi, (1-mu)*(1-phi)/phi)
        p = -0.5*log(mu) - 0.5*log(1-mu) - 0.5*log(phi) - 0.5*log(1-phi)
@@ -62,7 +55,7 @@ betaBin.mcmc <- function(x, n, mu.start, phi.start, burn.in = 1000, n.draws = 50
  mu = rep(0, burn.in + n.draws)
  theta = matrix(rep(0, length(n)*(burn.in + n.draws)), length(n), (burn.in + n.draws))
 
- #Create variables to store acceptance values
+ #Create counter variables to store frequency of acceptance in MH steps
 
  acceptance.mu = 0
  acceptance.phi = 0
@@ -76,19 +69,19 @@ betaBin.mcmc <- function(x, n, mu.start, phi.start, burn.in = 1000, n.draws = 50
 
  #Simulate starting values for thetas using initial mu and phi values
 
- for(j in 1:length(x)) {
-    theta[j, 1] = rbeta(1, mu[1]*(1-phi)[1]/phi[1] + x[j], (1-phi)[1]/phi[1]*(1-mu[1]) + n[j] - x[j])
+ for(i in 1:length(x)) {
+    theta[i, 1] = rbeta(1, mu[1]*(1-phi)[1]/phi[1] + x[i], (1-phi)[1]/phi[1]*(1-mu[1]) + n[i] - x[i])
  }
 
  #Begin MCMC chain. This chain will run for the length of the burn-in period
  #specified plus the number of iterations requested
 
- for(i in 2:(burn.in + n.draws)) {
+ for(j in 2:(burn.in + n.draws)) {
 
    #Set current chain values equal to previous chain values
 
-   phi[i] = phi[i-1]
-   mu[i] = mu[i-1]
+   phi[j] = phi[j-1]
+   mu[j] = mu[j-1]
 
    #Metropolis-Hastings step for mu
 
@@ -96,29 +89,29 @@ betaBin.mcmc <- function(x, n, mu.start, phi.start, burn.in = 1000, n.draws = 50
    #centered at the previous observation in the chain
    #with a pre-specified variance.
 
-   cand = rnorm(1,mu[i-1],sigma.mu)
+   cand = rnorm(1, mu[j-1], sigma.mu)
 
    #Check if candidate is between 0 and 1. If not, discard it.
   
    if((cand > 0) & (cand < 1)) {
 
-	  #cond.old = Conditional log posterior function at all previous values
-	  #cond.new = Conditional log posterior function at all previous values
-	  #except for candidate mu value.
+	  #m.old = Proportional log posterior function at all previous values
+	  #m.new = Proportional log posterior function at all previous values
+	  #	     except for candidate mu value.
 
-  	  cond.old = cond(phi[i-1],mu[i-1],x, n)
- 	  cond.new = cond(phi[i-1],cand,x, n)
+  	  m.old = m(mu[j-1],phi[j-1],x,n)
+ 	  m.new = m(cand,phi[j-1],x,n)
 
 	  #Draw an observation from a uniform(0,1)
 
  	  u = runif(1)
 
 	  #If difference in log posterior values is greater than log uniform
-        #observation, accept new mu value and increment acceptance counter
+          #observation, accept new mu value and increment acceptance counter
 	  #by 1.
 
-        if((cond.new - cond.old) > log(u)) {
-		mu[i] = cand
+          if((m.new - m.old) > log(u)) {
+		mu[j] = cand
 		acceptance.mu = acceptance.mu+1
 	  }
   }
@@ -129,18 +122,18 @@ betaBin.mcmc <- function(x, n, mu.start, phi.start, burn.in = 1000, n.draws = 50
   #centered at the previous observation in the chain
   #with a pre-specified variance.
 
-  cand = rnorm(1,phi[i-1],sigma.phi)
+  cand = rnorm(1,phi[j-1],sigma.phi)
 
   #Check if candidate is between 0 and 1. If not, discard it.
   
   if( (cand > 0) & (cand < 1)) {
 
-	#cond.old = Conditional log posterior function at all previous values
-	#cond.new = Conditional log posterior function at all previous values
-	#except for candidate mu value.
+	#m.old = Proportional log posterior function at all previous values
+	#m.new = Proportional log posterior function at all previous values
+	#           except for candidate phi value.
          
- 	cond.old = cond(phi[i-1],mu[i-1],x, n)
-	cond.new = cond(cand,mu[i-1],x, n)
+ 	m.old = m(mu[j-1],phi[j-1],x,n)
+	m.new = m(mu[j-1],cand,x,n)
 
 
 	#Draw an observation from a uniform(0,1)
@@ -148,11 +141,11 @@ betaBin.mcmc <- function(x, n, mu.start, phi.start, burn.in = 1000, n.draws = 50
  	u = runif(1)
 
 	#If difference in log posterior values is greater than log uniform
-      #observation, accept new phi value and increment acceptance counter
+        #observation, accept new phi value and increment acceptance counter
 	#by 1.
 
-      if((cond.new - cond.old) > log(u)) {
-		phi[i] = cand
+        if((m.new - m.old) > log(u)) {
+		phi[j] = cand
 		acceptance.phi = acceptance.phi + 1
 	} 
 
@@ -164,8 +157,8 @@ betaBin.mcmc <- function(x, n, mu.start, phi.start, burn.in = 1000, n.draws = 50
   #With parameters alpha = x + mu*(1-phi)/phi and beta = n - x + (1-mu)*(1-phi)/phi
   #where mu and phi are the current values in the chain.
 
-  for(j in 1:length(n)) {
-   theta[j, i] = rbeta(1, (1-phi[i])/phi[i]*mu[i] + x[j], (1-phi[i])/phi[i]*(1-mu[i]) + n[j] - x[j])
+  for(i in 1:length(n)) {
+   theta[i, j] = rbeta(1, (1-phi[j])/phi[j]*mu[j] + x[i], (1-phi[j])/phi[j]*(1-mu[j]) + n[i] - x[i])
   } 
 
  } #End MCMC Loop
@@ -191,6 +184,10 @@ betaBin.mcmc <- function(x, n, mu.start, phi.start, burn.in = 1000, n.draws = 50
 
 #Fitting the model
 
+#Set the seed so I get the same results each time I run the code.
+
+set.seed(5)
+
 #Use multiple chains to and check that all chains are converging to the same
 #stationary distribution after the burn-in. Use multiple starting values to
 #help check.
@@ -202,8 +199,6 @@ chain.3 <- betaBin.mcmc(x,n, 0.100, 0.0001)
 #Visually inspect the chains for mu, phi, and one theta to see if
 #all chains are converging to the same stationary distribution. A big blob of
 #colors is good. One or more chains separate from the rest is bad.
-
-par(mfrow = c(3,1))
 
 matplot(data.frame(chain.1$mu, chain.2$mu, chain.3$mu), type = 'l', lty = c(1,2,3), xlab = "Iteration", ylab = "Mu", main = "MCMC Chains for Mu")
 matplot(data.frame(chain.1$phi, chain.2$phi, chain.3$phi), type = 'l', lty = c(1,2,3), xlab = "Iteration", ylab = "Phi", main = "MCMC Chains for Phi")
@@ -257,19 +252,6 @@ mean(theta[1,])
 sd(theta[1,])
 quantile(theta[1,], c(0.025,0.975))
 
-#Probability Bryce Harper's average is larger than 0.330
-
-mean(theta[1,] >= 0.330)
-
-#Posterior predictive of Bryce Harper's observed average in a new 521 AB
-
-theta1.new <- 1/n[1]*rbinom(length(theta[1,]), n[1], theta[1,])
-
-hist(theta1.new, xlab = 'Observed Batting Average', main = 'Posterior Predictive Distribution of Observed Batting\nAverage for Bryce Harper in a new set of AB')
-
-mean(theta1.new)
-sd(theta1.new)
-quantile(theta1.new, c(0.025,0.975))
 
 #Means, standard deviations, and 95% intervals for thetas, the
 #true battings average of  each player in the sample

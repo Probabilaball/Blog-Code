@@ -80,15 +80,23 @@ betabin.par <- mm.est(x,n)
 alpha <- betabin.par$alpha
 beta <- betabin.par$beta
 
-#Mean, standard deviation, and 95% intervals for theta, the
-#batting average for each player in the sample
+#Mean and 95% interval for Bryce Harper's batting average
 
-names <- d$Name[d$AB >= 300]
 
 bryce.alpha <- x[1] + alpha
 bryce.beta <- n[1] - x[1] + beta
 
+bryce.alpha/(bryce.alpha + bryce.beta)
+
+qbeta(c(.025,.975), bryce.alpha, bryce.beta)
+
 curve(dbeta(x, bryce.alpha, bryce.beta), xlim = c(0.24, 0.36), xlab = 'Batting Averge', main = 'Posterior Distribution of Batting\nAverage for Bryce Harper')
+
+
+#Mean, standard deviation, and 95% intervals for theta, the
+#batting average for each player in the sample
+
+names <- d$Name[d$AB >= 300]
 
 data.frame("Player" = names, "Mean" = (x + alpha)/(n + alpha + beta), "Lower 95" = qbeta(0.025, x + alpha, n - x + beta), "Upper 95" = qbeta(0.975, x + alpha, n - x + beta))
 
