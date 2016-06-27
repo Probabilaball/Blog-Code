@@ -51,12 +51,12 @@ post.trout <- x.trout + alpha
 
 #Estimate posterior wOBA distribution by simulation
 
-n.iter = 500000
+n.iter <- 500000
 
 sim.data <- rdirichlet(n.iter, post.trout)
 sim.woba <- w[1]*sim.data[,1] + w[2]*sim.data[,2] + w[3]*sim.data[,3] + w[4]*sim.data[,4] + w[5]*sim.data[,5] + w[6]*sim.data[,6]
 
-hist(sim.woba, freq = F, main = 'Histogram of simulated wOBA values', xlab = 'Simulated wOBA')
+hist(sim.woba, freq = F, main = 'Histogram of simulated posterior wOBA values', xlab = 'Simulated wOBA')
 
 quantile(sim.woba, c(.025,.975))
 
@@ -69,7 +69,7 @@ qqline(sim.woba)
 
 
 
-#Estimate predictive wOBA distribution by simulation
+#Estimate posterior predictive wOBA distribution by simulation
 
 sim.pred <- matrix(rep(0, n.iter * 7), n.iter, 7)
 
@@ -79,7 +79,7 @@ sim.pred.woba <- rep(0, n.iter)
 
 for(i in 1:n.iter) sim.pred.woba[i] <- sum(w*sim.pred[i,]/sum(sim.pred[i,]))
 
-hist(sim.pred.woba, freq = F, main = 'Histogram of simulated predictive wOBA values', xlab = 'Simulated wOBA')
+hist(sim.pred.woba, freq = F, main = 'Histogram of simulated posterior predictive wOBA values', xlab = 'Simulated wOBA')
 
 quantile(sim.pred.woba, c(.025,.975))
 
