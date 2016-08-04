@@ -15,7 +15,7 @@ n <- n[samp]
 #Create matrix of counts of outcomes
 #Outcomes are single, double, triple, home run, walk, and hit by pitch
 
-x <- as.matrix(cbind(d$X1B, d$X2B, d$X3B, d$HR, d$BB, d$HBP))
+x <- as.matrix(cbind(d$X1B, d$X2B, d$X3B, d$HR, d$BB - d$IBB, d$HBP))
 
 #Append final column consisting of all other outcomes to event
 
@@ -28,9 +28,11 @@ library(dirmult)
 
 dirmult.fit <- dirmult(x)
 
+dirmult.fit
+
 alpha <- dirmult.fit$gamma
 
-
+sum(alpha)
 
 
 #Specific example: Mike Trout in 2013
@@ -43,7 +45,9 @@ w <- c(.89,1.27,1.62,2.10,0.69,0.72,0)
 
 #Define array of counts of events for Mike Trout 2013
 
-x.trout <- c(115,39,9,27,110,9,397)
+x.trout <- c(115,39,9,27,100,9,407)
+
+sum(w*x.trout/sum(x.trout))
 
 #Calculate dirichlet posterior for Mike Trout 2013
 #And take a weighted average of expectations

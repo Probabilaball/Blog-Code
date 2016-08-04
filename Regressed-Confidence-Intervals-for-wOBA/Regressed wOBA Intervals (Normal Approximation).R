@@ -83,7 +83,7 @@ w <- c(.89,1.27,1.62,2.10,0.69,0.72,0)
 
 #Define array of counts of events for Mike Trout 2013
 
-x.trout <- c(115,39,9,27,110,9,397)
+x.trout <- c(115,39,9,27,100,9,407)
 
 #Calculate dirichlet posterior for Mike Trout 2013
 #And take a weighted average of expectations

@@ -1,6 +1,6 @@
 #Read in Data
 
-d <- read.csv('C:/Users/Robert/Desktop/Multinomial-Dirichlet Empirical Bayes/2016 Hitting Data.csv', header=T)
+d <- read.csv('C:/Users/Robert/Documents/GitHub/Blog-Code/wOBA-Shrinkage-Estimation-by-the-Multinomial-Dirichlet-Model/2016 Hitting Data.csv', header=T)
 
 #Select only players with at least 300 events
 #Event is defined as AB
@@ -27,8 +27,11 @@ library(dirmult)
 
 dirmult.fit <- dirmult(x)
 
+dirmult.fit
+
 alpha <- dirmult.fit$gamma
 
+sum(alpha)
 
 
 
