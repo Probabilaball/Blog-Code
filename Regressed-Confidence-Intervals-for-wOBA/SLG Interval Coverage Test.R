@@ -1,7 +1,8 @@
 #Read in Data and separate into two data frames
 #Representing the first and second halves of the season
 
-d <- read.csv('C:/Users/Robert/Desktop/Multinomial-Dirichlet Empirical Bayes/Interval Data.csv',header=T)
+
+d <- read.csv('C:/Users/Rob/Documents/Github/Blog-Code/Regressed-Confidence-Intervals-for-wOBA/Offensive Split Data.csv',header=T)
 
 x.1 <- data.frame(d$X1B.1, d$X2B.1, d$X3B.1, d$HR.1)
 x.1 <- as.matrix(cbind(x.1, d$AB.1 - apply(x.1, 1, sum)))
@@ -120,26 +121,34 @@ dirmult.pred.int <- function(x, w, par, n.new) {
 #Use parameters estimated in previous article from
 #2010 - 2015 data with at least 300 events
 
-par <- c(42.443604, 12.855782, 1.381905, 7.073672, 176.120837)
+alpha <- c(42.44, 12.86, 1.38, 7.07, 176.12)
 
-#wOBA weights
+#SLG weights
 
 w <- c(1,2,3,4,0)
 
+
+#n.1 = first half events.
 #n.2 = second half events. I'm using this as n.new in the predictive intervals
 
+n.1 <- d$AB.1
 n.2 <- d$AB.2
 
-#Calculate mean and predictive wOBA intervals for the second half
+#Calculate mean and predictive SLG intervals for the second half
 #Using only the hitting stats in the first half
 
-int.1 <- dirmult.mean.int(x.1, w, par)
-pred.1 <- dirmult.pred.int(x.1, w, par, n.2)
+int.1 <- dirmult.mean.int(x.1, w, alpha)
+pred.1 <- dirmult.pred.int(x.1, w, alpha, n.2)
 
-#Calculate second-half SLG
+#Calculate first and second-half SLG
 
+slg.1 <- rep(0, dim(x.1)[1])
 slg.2 <- rep(0, dim(x.1)[1])
-for(i in 1:length(slg.2)) slg.2[i] <- sum(w*x.2[i,]/n.2[i])
+
+for(i in 1:length(slg.2)) {
+ slg.1[i] <- sum(w*x.1[i,]/n.1[i])
+ slg.2[i] <- sum(w*x.2[i,]/n.2[i])
+}
 
 #Calculate coverage of the mean and predictive SLG intervals
 

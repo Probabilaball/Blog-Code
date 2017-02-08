@@ -1,7 +1,7 @@
 #Read in Data and separate into two data frames
 #Representing the first and second halves of the season
 
-d <- read.csv('C:/Users/Robert/Desktop/Multinomial-Dirichlet Empirical Bayes/Interval Data.csv',header=T)
+d <- read.csv('C:/Users/Rob/Documents/Github/Blog-Code/Regressed-Confidence-Intervals-for-wOBA/Offensive Split Data.csv',header=T)
 
 x.1 <- data.frame(d$X1B.1, d$X2B.1, d$X3B.1, d$HR.1, d$BB.1 - d$IBB.1, d$HBP.1)
 x.1 <- as.matrix(cbind(x.1, d$AB.1 + d$BB.1 - d$IBB.1 + d$SF.1 + d$HBP.1 - apply(x.1, 1, sum)))
@@ -120,31 +120,38 @@ dirmult.pred.int <- function(x, w, par, n.new) {
 #Use parameters estimated in previous article from
 #2010 - 2015 data with at least 300 events
 
-#par <- c(33.086545, 10.082944, 1.123698, 5.537847, 17.005605, 1.902485, 137.992938)
-par <- c(34.30376, 10.44264, 1.15606, 5.73569, 16.28635, 1.96183, 144.51164)
+#Define array of wOBA weights
 
-#wOBA weights
+w <- c(.89,1.27,1.62,2.10,0.69,0.72,0)
 
-w <- c(0.89,1.27,1.62,2.10,0.69,0.72,0)
+#Define array of Dirichlet prior parameters
 
+alpha <- c(34.30, 10.44, 1.16, 5.74, 16.29, 1.96, 144.51)
+
+#n.1 = first half events.
 #n.2 = second half events. I'm using this as n.new in the predictive intervals
 
+n.1 <- d$AB.1 + d$BB.1 - d$IBB.1 + d$SF.1 + d$HBP.1
 n.2 <- d$AB.2 + d$BB.2 - d$IBB.2 + d$SF.2 + d$HBP.2
 
 #Calculate mean and predictive wOBA intervals for the second half
 #Using only the hitting stats in the first half
 
-int.1 <- dirmult.mean.int(x.1, w, par)
-pred.1 <- dirmult.pred.int(x.1, w, par, n.2)
+int.1 <- dirmult.mean.int(x.1, w, alpha)
+pred.1 <- dirmult.pred.int(x.1, w, alpha, n.2)
 
-#Calculate second-half wOBA
+#Calculate first and second-half wOBA
 
+woba.1 <- rep(0, dim(x.1)[1])
 woba.2 <- rep(0, dim(x.1)[1])
-for(i in 1:length(woba.2)) woba.2[i] <- sum(w*x.2[i,]/n.2[i])
+
+for(i in 1:length(woba.2)) {
+ woba.1[i] <- sum(w*x.1[i,]/n.1[i])
+ woba.2[i] <- sum(w*x.2[i,]/n.2[i])
+}
 
 #Calculate coverage of the mean and predictive wOBA intervals
 
 mean( (int.1$L <= woba.2) & (woba.2 <= int.1$U) )
 mean( (pred.1$L <= woba.2) & (woba.2 <= pred.1$U) )
 
-  

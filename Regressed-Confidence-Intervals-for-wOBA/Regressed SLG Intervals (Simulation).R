@@ -1,42 +1,16 @@
-#Read in Data
-
-d <- read.csv('C:/Users/Robert/Documents/GitHub/Blog-Code/Regressed-Confidence-Intervals-for-wOBA/2016 Hitting Data.csv', header=T)
-
-#Select only players with at least 300 events
-#Event is defined as AB
-
-n <- d$AB  
-
-samp <- (n >= 300)
-
-d <- d[samp,]
-n <- n[samp]
-
-#Create matrix of counts of outcomes
-#Outcomes are single, double, triple, home run
-
-x <- as.matrix(cbind(d$X1B, d$X2B, d$X3B, d$HR))
-
-#Append final column consisting of all other outcomes to event
-
-x <- cbind(x, n - apply(x,1,sum))
-
-#Fit the multinomial-dirichlet model using the dirmult package
+#Load the dirmult package for simulation
 
 library(dirmult)
 
-dirmult.fit <- dirmult(x)
-
-alpha <- dirmult.fit$gamma
-
-
 #Specific example: Mike Trout in 2013
-
-
 
 #Define array of SLG weights
 
 w <- c(1,2,3,4,0)
+
+#Define array of Dirichlet prior parameters
+
+alpha <- c(42.44, 12.86, 1.38, 7.07, 176.12)
 
 #Define array of counts of events for Mike Trout 2013
 
@@ -51,17 +25,34 @@ post.trout <- x.trout + alpha
 
 #Estimate posterior SLG distribution by simulation
 
+#set the seed for consistent results
+
+set.seed(5)
+
+
+#Take n.iter simulations
+
 n.iter <- 500000
+
+#Simulate true talent levels for the posterior for Mike Trout in 2013
+#and calculate wOBA for each
 
 sim.data <- rdirichlet(n.iter, post.trout)
 sim.slg <- w[1]*sim.data[,1] + w[2]*sim.data[,2] + w[3]*sim.data[,3] + w[4]*sim.data[,4]
 
-hist(sim.slg, freq = F, main = 'Histogram of simulated SLG values', xlab = 'Simulated SLG')
+#Take quantiles for a 95% credible interval
 
-quantile(sim.slg, c(.025,.975))
+slg.ci <- quantile(sim.slg, c(.025,.975))
 
+slg.ci
 
-#Check normality
+#Show histogram of values
+
+hist(sim.slg, freq = F,  main = 'Histogram of simulated posterior SLG values\nfor Mike  Trout in 2013', xlab = 'Simulated SLG')
+
+abline(v = slg.ci, lty = 2)
+
+#Check normality using a quantile-quantile plot
 
 qqnorm(sim.slg)
 qqline(sim.slg)
@@ -71,6 +62,8 @@ qqline(sim.slg)
 
 #Estimate posterior predictive SLG distribution by simulation
 
+set.seed(5)
+
 sim.pred <- matrix(rep(0, n.iter * 5), n.iter, 5)
 
 for(i in 1:n.iter) sim.pred[i,] <- rmultinom(1, sum(x.trout) , sim.data[i,])
@@ -79,12 +72,13 @@ sim.pred.slg <- rep(0, n.iter)
 
 for(i in 1:n.iter) sim.pred.slg[i] <- sum(w*sim.pred[i,]/sum(sim.pred[i,]))
 
-hist(sim.pred.slg, freq = F, main = 'Histogram of simulated predictive SLG values', xlab = 'Simulated SLG')
-
-quantile(sim.pred.slg, c(.025,.975))
+pred.slg.ci <- quantile(sim.pred.slg, c(.025,.975))
 
 
-#Check normality
+hist(sim.pred.slg, freq = F, main = 'Histogram of simulated posterior predictive wOBA \nvalues for Mike Trout in 2013', xlab = 'Simulated wOBA')
+abline(v = pred.slg.ci, lty = 2)
+
+#Check normality using quantile-quantile plot
 
 qqnorm(sim.pred.slg)
 qqline(sim.pred.slg)
