@@ -1,6 +1,6 @@
 #Load Data
 
-d <- read.csv('C:/[File Path]/Interval Data.csv',header=T)
+d <- read.csv('C:/Users/Rob/Documents/Github/Blog-Code/From-Stabilization-to-Interval-Estimation/Offensive Split Data.csv',header=T)
 
 #Interval Calculation Function
 #x.1 and n.1 are the count of events and trials in the first half

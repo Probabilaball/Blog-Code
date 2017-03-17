@@ -12,7 +12,6 @@ cov.matrix <- function(pars) {
 
    for(i in 1:k) {
     for(j in 1:k) {
-      
       if(i == j) m[i,j] = pars[i]*(a0-pars[i])/(a0^2*(a0 + 1))
       if(i != j) m[i,j] = -pars[i]*pars[j]/(a0^2*(a0 + 1))
     }
