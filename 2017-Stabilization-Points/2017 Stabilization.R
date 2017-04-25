@@ -1,7 +1,7 @@
 #Read in Data
 
-h <- read.csv('C:/Users/Rob/Desktop/2017 Hitting Data.csv',header=T)
-p <- read.csv('C:/Users/Rob/Desktop/2017 Pitching Data.csv',header=T)
+h <- read.csv('C:/Users/Rob/Documents/GitHub/Blog-Code/2017-Stabilization-Points//2017 Hitting Data.csv',header=T)
+p <- read.csv('C:/Users/Rob/Documents/GitHub/Blog-Code/2017-Stabilization-Points//2017 Pitching Data.csv',header=T)
 
 #h = hitter data
 #p = pitcher data
